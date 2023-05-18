@@ -16,6 +16,7 @@ mongoose.connect('mongodb://localhost:27017/staffScheduler', {
 app.use(express.json());
 app.use(cors());
 
+// GET all employees
 app.get('/employees', async (req, res) => {
     try {
         const employees = await Employee.find();
@@ -25,46 +26,58 @@ app.get('/employees', async (req, res) => {
     }
 });
 
+// CREATE new employee
 app.post('/employees', async (req, res) => {
-    const employee = new Employee({
-        name: req.body.name,
-        phoneNumber: req.body.phoneNumber,
-        credential: req.body.credential,
-        days: req.body.days,
-    });
-
     try {
-        const newEmployee = await employee.save();
-        res.status(201).json(newEmployee);
+        const employee = new Employee(req.body);
+        await employee.save();
+        res.status(201).json(employee);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
 });
 
-// Shift endpoints
-app.get('/shifts', async (req, res) => {
+// UPDATE employee
+app.put('/employees/:id', async (req, res) => {
     try {
-        const shifts = await Shift.find();
-        res.json(shifts);
+        const { id } = req.params;
+        const employee = await Employee.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(employee);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// DELETE employee
+app.delete('/employees/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await Employee.findByIdAndDelete(id);
+        res.sendStatus(204);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// SEARCH for employees by credential and unit
+app.get('/employees/search', async (req, res) => {
+    try {
+        const { credential, unit } = req.query;
+
+        const employees = await Employee.find({
+            credentials: {
+                [credential]: true,
+            },
+            preferredUnit: unit,
+        });
+
+        res.json(employees);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-app.post('/shifts', async (req, res) => {
-    const shift = new Shift({
-        shiftName: req.body.shiftName,
-        startTime: req.body.startTime,
-        endTime: req.body.endTime,
-    });
-
-    try {
-        const newShift = await shift.save();
-        res.status(201).json(newShift);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});
+// Your shift routes here...
 
 app.listen(3001, () => {
     console.log('Server is running on http://localhost:3001');

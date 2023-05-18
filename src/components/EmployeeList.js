@@ -1,27 +1,51 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-function EmployeeList() {
-    // fetch employee list from API
-    const employees = []; // placeholder
+function EmployeeList({ triggerUpdate }) {
+    const [employees, setEmployees] = useState([]);
+    const [search, setSearch] = useState("");
+
+    // This function runs whenever the component mounts or triggerUpdate changes.
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await axios.get('http://localhost:3001/employees');
+                setEmployees(response.data);
+            } catch (err) {
+                console.error('Error fetching employees', err);
+            }
+        };
+
+        fetchData();
+    }, [triggerUpdate]);
+
+    const handleSearch = async () => {
+        try {
+            const response = await axios.get(`http://localhost:3001/employees?days=${search}`);
+            setEmployees(response.data);
+        } catch (err) {
+            console.error('Error fetching employees', err);
+        }
+    };
 
     return (
-        <div style={{ margin: '1rem' }}>
-            <h1>Employee List</h1>
-            {employees.length > 0 ? (
-                employees.map((employee) => (
-                    <Link to={`/employees/${employee.id}`} key={employee.id}>
-                        <div style={{ margin: '0.5rem 0' }}>
-                            {employee.name} ({employee.credential})
-                        </div>
-                    </Link>
-                ))
-            ) : (
-                <p>No employees found</p>
-            )}
-            <Link to="/employees/new">
-                <button style={{ margin: '0.5rem 0' }}>Add Employee</button>
-            </Link>
+        <div>
+            <h2>Employee List</h2>
+            <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Enter days"
+            />
+            <button onClick={handleSearch}>Search</button>
+
+            {employees.map(employee => (
+                <div key={employee._id}>
+                    <h3>name:{employee.name}</h3>
+                    <p>number:{employee.phoneNumber}</p>
+                    <p>credentials:{employee.credential}</p>
+                </div>
+            ))}
         </div>
     );
 }
