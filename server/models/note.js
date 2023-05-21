@@ -1,23 +1,23 @@
 const mongoose = require('mongoose');
 
-const ShiftSchema = new mongoose.Schema({
+const NoteSchema = new mongoose.Schema({
     employee: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Employee',
         required: true
     },
-    shiftType: {
+    title: {
         type: String,
         required: true
     },
-    startTime: {
-        type: Date,
+    content: {
+        type: String,
         required: true
     },
-    endTime: {
+    createdAt: {
         type: Date,
-        required: true
+        default: Date.now
     }
 });
 
-module.exports = mongoose.model('Shift', ShiftSchema);
+module.exports = mongoose.model('Note', NoteSchema);

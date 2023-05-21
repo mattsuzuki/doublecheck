@@ -1,15 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const Employee = require('./models/employee');
-const Shift = require('./models/shift');
+const Employee = require('./models/Employee');
+const Shift = require('./models/Shift');
+const Note = require('./models/Note');
 
 const app = express();
 
-mongoose.connect('mongodb://localhost:27017/staffScheduler', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose
+    .connect('mongodb://localhost:27017/staffScheduler', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('Could not connect to MongoDB...', err));
 
@@ -65,15 +67,45 @@ app.get('/employees/search', async (req, res) => {
         const { credential, unit } = req.query;
 
         const employees = await Employee.find({
-            credentials: {
-                [credential]: true,
-            },
+            credential: credential,
             preferredUnit: unit,
         });
 
         res.json(employees);
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// GET all notes for an employee
+app.get('/employees/:id/notes', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findById(id).populate('notes');
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        res.json(employee.notes);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// CREATE new note for an employee
+app.post('/employees/:id/notes', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findById(id);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        const note = new Note(req.body);
+        await note.save();
+        employee.notes.push(note);
+        await employee.save();
+        res.status(201).json(note);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 });
 
