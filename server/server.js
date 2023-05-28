@@ -4,6 +4,7 @@ const cors = require('cors');
 const Employee = require('./models/Employee');
 const Shift = require('./models/Shift');
 const Note = require('./models/Note');
+const Schedule = require('./models/Schedule');
 
 const app = express();
 
@@ -83,6 +84,33 @@ app.get('/employees/search', async (req, res) => {
     }
 });
 
+// GET one employee
+app.get('/employee/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findById(id);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        res.json(employee);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+app.get('/employees/:id/schedules', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findById(id).populate('schedules');
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        res.json(employee.schedules);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // GET all notes for an employee
 app.get('/employees/:id/notes', async (req, res) => {
     try {
@@ -94,6 +122,50 @@ app.get('/employees/:id/notes', async (req, res) => {
         res.json(employee.notes);
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+app.put('/schedules/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const schedule = await Schedule.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(schedule);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+app.post('/employees/:id/shifts', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { shift, date } = req.body;
+        const employee = await Employee.findById(id);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        const newShift = new Shift({ date, shift, employee: id });
+        await newShift.save();
+        employee.shifts.push(newShift);
+        await employee.save();
+        res.status(201).json(newShift);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+app.post('/employees/:id/schedules', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const employee = await Employee.findById(id);
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        const schedule = new Schedule(req.body);
+        await schedule.save();
+        employee.schedules.push(schedule);
+        await employee.save();
+        res.status(201).json(schedule);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
     }
 });
 

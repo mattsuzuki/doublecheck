@@ -6,6 +6,9 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import Checkbox from '@mui/material/Checkbox';
+import EmployeeScheduleCard from './EmployeeScheduleCard';
+
 
 function EmployeeList({ triggerUpdate }) {
     const [employees, setEmployees] = useState([]);
@@ -14,11 +17,7 @@ function EmployeeList({ triggerUpdate }) {
 
     useEffect(() => {
         fetchEmployees();
-    }, [triggerUpdate]);
-
-    useEffect(() => {
-        fetchEmployees();
-    }, [filterCredential]);
+    }, [triggerUpdate, filterCredential]);
 
     const fetchEmployees = async () => {
         try {
@@ -66,6 +65,11 @@ function EmployeeList({ triggerUpdate }) {
                     <h3 className="employee-name">Name: {employee.name}</h3>
                     <p className="employee-info">Number: {employee.phoneNumber}</p>
                     <p className="employee-info">Credentials: {employee.credential}</p>
+                    <p className="employee-info">Gender: {employee.gender}</p>
+                    <EmployeeScheduleCard key={employee._id} employee={employee} />
+                    <Link to={`/employees/${employee._id}`} className="details-link">
+                        View Details
+                    </Link>
                 </div>
             ))}
         </div>

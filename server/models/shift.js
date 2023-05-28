@@ -1,23 +1,12 @@
 const mongoose = require('mongoose');
 
-const ShiftSchema = new mongoose.Schema({
-    employee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Employee',
-        required: true
-    },
-    shiftType: {
-        type: String,
-        required: true
-    },
-    startTime: {
-        type: Date,
-        required: true
-    },
-    endTime: {
-        type: Date,
-        required: true
-    }
+const shiftSchema = new mongoose.Schema({
+    date: { type: Date, required: true },
+    shift: { type: String, required: true, enum: ['AM', 'PM', 'NOC'] },
+    employee: { type: mongoose.Schema.Types.ObjectId, ref: 'employee' }
 });
-
+const Shift = mongoose.model('Shift', shiftSchema);
 module.exports = mongoose.model('Shift', ShiftSchema);
+
+
+

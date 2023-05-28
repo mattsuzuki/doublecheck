@@ -5,34 +5,9 @@ import { useParams } from 'react-router-dom';
 function EmployeeDetails() {
     const { id } = useParams();
     const [employee, setEmployee] = useState(null);
-    const [assignedDays, setAssignedDays] = useState([]);
-    const [assignedShifts, setAssignedShifts] = useState([]);
-    const [selectedDay, setSelectedDay] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState(0);
+    const [selectedDays, setSelectedDays] = useState([]);
     const [selectedShift, setSelectedShift] = useState('');
-
-    useEffect(() => {
-        fetchEmployeeDetails();
-        fetchAssignedDays();
-        fetchAssignedShifts();
-    }, [id]);
-
-    const fetchAssignedDays = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3001/employees/${id}/days`);
-            setAssignedDays(response.data);
-        } catch (error) {
-            console.error('Error fetching assigned days:', error);
-        }
-    };
-
-    const fetchAssignedShifts = async () => {
-        try {
-            const response = await axios.get(`http://localhost:3001/employees/${id}/shifts`);
-            setAssignedShifts(response.data);
-        } catch (error) {
-            console.error('Error fetching assigned shifts:', error);
-        }
-    };
 
     const fetchEmployeeDetails = async () => {
         try {
@@ -43,35 +18,21 @@ function EmployeeDetails() {
         }
     };
 
-    const handleDayChange = (e) => {
-        setSelectedDay(e.target.value);
-    };
+    useEffect(() => {
+        fetchEmployeeDetails();
+    }, [id]);
 
-    const handleShiftChange = (e) => {
-        setSelectedShift(e.target.value);
-    };
-
-    const addAssignedDay = async () => {
+    const assignShift = async () => {
         try {
-            await axios.post(`http://localhost:3001/employees/${id}/days`, {
-                day: selectedDay,
-            });
-            fetchAssignedDays();
-            setSelectedDay('');
+            await Promise.all(selectedDays.map(day => {
+                return axios.post(`http://localhost:3001/employees/${id}/shifts`, {
+                    shift: selectedShift,
+                    date: new Date(new Date().getFullYear(), selectedMonth, day),
+                });
+            }));
+            // refresh the employee details or do some other update
         } catch (error) {
-            console.error('Error adding assigned day:', error);
-        }
-    };
-
-    const addAssignedShift = async () => {
-        try {
-            await axios.post(`http://localhost:3001/employees/${id}/shifts`, {
-                shift: selectedShift,
-            });
-            fetchAssignedShifts();
-            setSelectedShift('');
-        } catch (error) {
-            console.error('Error adding assigned shift:', error);
+            console.error('Error assigning shift:', error);
         }
     };
 
@@ -85,34 +46,55 @@ function EmployeeDetails() {
             <p>Name: {employee.name}</p>
             <p>Phone Number: {employee.phoneNumber}</p>
             <p>Credential: {employee.credential}</p>
-            {/* Display other employee details as needed */}
-            <h3>Assigned Days</h3>
-            <ul>
-                {assignedDays.map((day) => (
-                    <li key={day._id}>{day.day}</li>
-                ))}
-            </ul>
+
+            <h3>Assign Shifts</h3>
             <div>
-                <select value={selectedDay} onChange={handleDayChange}>
-                    <option value="">Select a day</option>
-                    {/* Render options for days */}
+                <select value={selectedMonth} onChange={(e) => {
+                    setSelectedMonth(e.target.value);
+                    setSelectedDays([]);
+                }}>
+                    {/* Replace this with actual month options */}
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    {/* Render rest of the months */}
                 </select>
-                <button onClick={addAssignedDay}>Add Day</button>
             </div>
 
-            <h3>Assigned Shifts</h3>
-            <ul>
-                {assignedShifts.map((shift) => (
-                    <li key={shift._id}>{shift.shift}</li>
-                ))}
-            </ul>
             <div>
-                <select value={selectedShift} onChange={handleShiftChange}>
-                    <option value="">Select a shift</option>
-                    {/* Render options for shifts */}
-                </select>
-                <button onClick={addAssignedShift}>Add Shift</button>
+                {[...Array(new Date(new Date().getFullYear(), selectedMonth + 1, 0).getDate()).keys()].map(day => (
+                    <div key={day}>
+                        <input type="checkbox" id={`day-${day + 1}`} value={day + 1} checked={selectedDays.includes(day + 1)}
+                            onChange={(e) => {
+                                if (e.target.checked) {
+                                    setSelectedDays([...selectedDays, day + 1]);
+                                } else {
+                                    setSelectedDays(selectedDays.filter(d => d !== day + 1));
+                                }
+                            }}
+                        />
+                        <label htmlFor={`day-${day + 1}`}>{day + 1}</label>
+                    </div>
+                ))}
             </div>
+
+            <div>
+                <input type="radio" id="AM" name="shift" value="AM" checked={selectedShift === 'AM'}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                />
+                <label htmlFor="AM">AM</label>
+
+                <input type="radio" id="PM" name="shift" value="PM" checked={selectedShift === 'PM'}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                />
+                <label htmlFor="PM">PM</label>
+
+                <input type="radio" id="NOC" name="shift" value="NOC" checked={selectedShift === 'NOC'}
+                    onChange={(e) => setSelectedShift(e.target.value)}
+                />
+                <label htmlFor="NOC">NOC</label>
+            </div>
+
+            <button onClick={assignShift}>Assign Shift</button>
         </div>
     );
 }

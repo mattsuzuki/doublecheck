@@ -100,6 +100,13 @@ export default function EmployeeForm() {
                         </Button>
                     </Link>
                 </div>
+                <div className='spaced'>
+                    <Link to="/employee-list">
+                        <Button variant="contained" color="primary">
+                            View Employees
+                        </Button>
+                    </Link>
+                </div>
             </div>
         </div>
     );
