@@ -18,6 +18,11 @@ mongoose
 app.use(express.json());
 app.use(cors());
 
+// Welcome route
+app.get('/', (req, res) => {
+    res.send('Welcome to the backend server');
+});
+
 // GET all employees
 app.get('/employees', async (req, res) => {
     try {
@@ -30,12 +35,13 @@ app.get('/employees', async (req, res) => {
 
 // CREATE new employee
 app.post('/employees', async (req, res) => {
+    console.log(req.body); // This is the new line
     try {
         const employee = new Employee(req.body);
         await employee.save();
         res.status(201).json(employee);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(400).json({ message: 'Error creating employee', error: err });
     }
 });
 
